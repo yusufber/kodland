@@ -36,11 +36,30 @@ def test_add_new_user(setup_database, connection):
     user = cursor.fetchone()
     assert user, "Kullanıcı veri tabanına eklenmiş olmalıdır."
 
-# İşte yazabileceğiniz bazı testler:
-"""
-Var olan bir kullanıcı adıyla kullanıcı eklemeye çalışmayı test etme.
-Başarılı kullanıcı doğrulamasını test etme.
-Var olmayan bir kullanıcıyla doğrulama yapmayı test etme.
-Yanlış şifreyle doğrulama yapmayı test etme.
-Kullanıcı listesinin doğru şekilde görüntülenmesini test etme.
-"""
+
+def test_add_existing_user(setup_database):
+    """Var olan bir kullanıcı adıyla kullanıcı eklemeye çalışmayı test eder."""
+    add_user('duplicate_user', 'dup@example.com', 'password123')
+    result = add_user('duplicate_user', 'other@example.com', 'password456')
+    assert result is False
+
+def test_authenticate_user_success(setup_database):
+    """Başarılı kullanıcı doğrulamasını test eder."""
+    add_user('auth_user', 'auth@example.com', 'secret_pass')
+    assert authenticate_user('auth_user', 'secret_pass') is True
+
+def test_authenticate_non_existent_user(setup_database):
+    """Var olmayan bir kullanıcıyla doğrulama yapmayı test eder."""
+    assert authenticate_user('non_existent', 'password') is False
+
+def test_authenticate_wrong_password(setup_database):
+    """Yanlış şifreyle doğrulama yapmayı test eder."""
+    add_user('wrong_pass_user', 'wrong@example.com', 'correct_pass')
+    assert authenticate_user('wrong_pass_user', 'incorrect_pass') is False
+
+def test_display_users(setup_database, capsys):
+    """Kullanıcı listesinin doğru şekilde görüntülenmesini test eder."""
+    add_user('display_user', 'display@example.com', 'pass')
+    display_users()
+    captured = capsys.readouterr()
+    assert 'display_user' in captured.out
